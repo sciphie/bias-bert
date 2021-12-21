@@ -110,7 +110,8 @@ def check_df(foo):
 
 # ----------------------------------------------------------------------------------------------- #
 # ------------------------------------ Names ---------------------------------------------------- #
-# Todo: NER does not work properly. So macht das keinen Sinn 
+# Todo: NER does not work properly. So macht das keinen Sinn. 
+# Not used in the latest implementation
 
 def mask_names_list(text_ls, names_a=m_names, names_b=f_names):
     male_text = []    # Create empty column for male reviews
