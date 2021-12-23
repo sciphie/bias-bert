@@ -5,7 +5,7 @@ import data_masking as masking
 import logging
 
 # where to safe data and tables? right here I suppose. Else modify 
-path = "."
+path = ""
 
 ########################################################################################
 # Download IMDb Data

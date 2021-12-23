@@ -2,13 +2,18 @@ import sys, os
 import pandas as pd
 import data_masking as masking
 import numpy as np
+import pickle
 
 # where to safe data and tables? right here I suppose. Else modify 
-path = "."
+path = ""
 
 ########################################################################################
 # Download IMDb Data
-os.system('gdown https://drive.google.com/uc?id=0B04GJPshIjmPRnZManQwWEdTZjg')
+#os.system('gdown https://drive.google.com/uc?id=0B04GJPshIjmPRnZManQwWEdTZjg')
+#os.system('unzip trainingandtestdata.zip')
+#os.system('mv testdata.manual.2009.06.14.csv Twitter_raw_data/')
+#os.system('mv training.1600000.processed.noemoticon.csv Twitter_raw_data/')
+#os.system('mv mv trainingandtestdata.zip Twitter_raw_data/')
 
 def clean_text(reviews):
     reviews = [re.sub('@[^\s]+','', line) for line in reviews]
@@ -28,9 +33,9 @@ result = np.array_split(shuffled, 2)
 assert(len(result[0]) == 800000)
 assert(len(result[1]) == 800000)
 
-with open(path + 'Twitter_train_raw', "wb") as fp:   #Pickling
+with open(path + 'Twitter_raw_data/Twitter_train_raw', "wb") as fp:   #Pickling
     pickle.dump(result[0], fp)
-with open(path + 'Twitter_test_raw', "wb") as fp:   #Pickling
+with open(path + 'Twitter_raw_data/Twitter_test_raw', "wb") as fp:   #Pickling
     pickle.dump(result[1], fp)
 
 # test that no neutrals are included
