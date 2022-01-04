@@ -9,4 +9,14 @@ res_data/IMDB_l_train
 res_data/.ipynb_checkpoints/
 res_data/__pycache__/
 
+res_models/accuracies/*
+res_models/IMDB/*
+res_models/logs/*
+res_models/Twitter/*
+
+!res_models/accuracies/.placeholder
+!res_models/IMDB/.placeholder
+!res_models/logs/.placeholder
+!res_models/Twitter/.placeholder
+
 

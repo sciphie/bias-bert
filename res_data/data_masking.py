@@ -4,6 +4,7 @@ logging.basicConfig(level=logging.INFO)
 from term_lists import *
 
 logging.info("successfully imported the latest version of data_masking.") 
+print("successfully imported the latest version of data_masking.") 
 # ----------------------------------------------------------------------------------------------- #
 # ----------------------------------------------------------------------------------------------- #
 # utility functions
@@ -102,8 +103,10 @@ def check_df(foo):
     c8 = all([x >= y for x,y in list(zip( foo['len'].tolist(), [len(s.split()) for s in foo['text_pro_N'].tolist()] ))]) 
     if c1 and c2 and c4 and c5 and c6 and c7 and c8:
         logging.info('all tests ok')
+        print('tested dataframe - everything is fine')
     else:
         logging.error('something is wrong in your DataFrame') 
+        print('Error: something is wrong in your DataFrame') 
         print(c1,c2,c4,c5,c6,c7,c8)
 
 

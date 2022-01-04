@@ -1,4 +1,6 @@
 import sys, os
+sys.path.append('./..')
+from test_utils import check_path
 import pandas as pd
 import data_masking as masking
 import numpy as np
@@ -6,14 +8,16 @@ import pickle
 
 # where to safe data and tables? right here I suppose. Else modify 
 path = ""
+check_path(path + 'Twitter_training')
+check_path('Twitter_raw_data')
 
 ########################################################################################
 # Download IMDb Data
-#os.system('gdown https://drive.google.com/uc?id=0B04GJPshIjmPRnZManQwWEdTZjg')
-#os.system('unzip trainingandtestdata.zip')
-#os.system('mv testdata.manual.2009.06.14.csv Twitter_raw_data/')
-#os.system('mv training.1600000.processed.noemoticon.csv Twitter_raw_data/')
-#os.system('mv mv trainingandtestdata.zip Twitter_raw_data/')
+os.system('gdown https://drive.google.com/uc?id=0B04GJPshIjmPRnZManQwWEdTZjg')
+os.system('unzip trainingandtestdata.zip')
+os.system('mv testdata.manual.2009.06.14.csv Twitter_raw_data/')
+os.system('mv training.1600000.processed.noemoticon.csv Twitter_raw_data/')
+os.system('mv mv trainingandtestdata.zip Twitter_raw_data/')
 
 def clean_text(reviews):
     reviews = [re.sub('@[^\s]+','', line) for line in reviews]
@@ -56,15 +60,11 @@ df_test_complete.insert(1, 'text', clean_text(df_test_complete.text_raw.tolist()
 df_train = df_train_complete[['ID', 'text', 'sentiment']].rename({'sentiment': 'label'}, axis=1)
 df_test = df_test_complete[['ID', 'text', 'sentiment']].rename({'sentiment': 'label'}, axis=1)
 
-#df_train.to_pickle(path + 'Twitter_training/Twitter_train')
-#df_test.to_pickle(path + 'Twitter_training/Twitter_test')
 df_train.to_pickle(path + 'Twitter_training/Twitter_original_train')
 df_test.to_pickle(path + 'Twitter_training/Twitter_original_test')
 
 ##### ##### #####
 # Twitter - Step 1: Gender neutral data sets for training
-# df_train_ = pd.read_pickle("Twitter_l_train")
-# df_test_ = pd.read_pickle("Twitter_l_test")
 
 # Mask all terms in Data 
 df_train_ = df_train.copy()

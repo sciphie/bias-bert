@@ -1,13 +1,11 @@
 from itertools import chain
-import logging
-logging.basicConfig(level=logging.INFO)
 
 # Import predefined term lists
 def imp_terms(path):
     a_file = open(path, "rb")
     terms = pickle.load(a_file)
     a_file.close()
-    logging.info('load ' + path + ', total number: ' + str(len(terms)))
+    print('load ' + path + ', total number: ' + str(len(terms)))
     return terms 
 
 #terms_m2f = imp_terms("terms_m2f")
@@ -303,4 +301,4 @@ terms_f2m = dict((v,k) for k,v in terms_f2m.items())
 
 all_terms = set(list(terms_m2f.keys())+list(terms_f2m.keys())+only_cover)
 
-logging.info('imported term dicts: prons_m2f, prons_f2m, terms_m2f, terms_f2m; and sets; all_prons and all_terms')
+print('imported term dicts: prons_m2f, prons_f2m, terms_m2f, terms_f2m; and sets; all_prons and all_terms')

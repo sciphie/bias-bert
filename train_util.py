@@ -9,12 +9,33 @@ from transformers import EarlyStoppingCallback
 from os import walk
 import sys, os
 
+# see https://huggingface.co/docs/transformers/main_classes/logging
+transformers.utils.logging.set_verbosity_info
+transloggers = transformers.utils.logging.get_logger
+# create a new streamhandler to also see the loggings in the shell (stdout) 
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+root.addHandler(handler)
+
+
 if torch.cuda.is_available():
     logging.info('Current GPU device : ' + str(torch.cuda.current_device()))
 else: 
-    logging.warning('No GPU available') 
+    logging.warning('No GPU available')
 
-    
+
+def check_path(path):
+    '''
+    check if the paths exists, else create 
+    '''
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print("created path "+ path)
+    return path
+
+
 def load_hf(model_id, load_model=True):
     '''
     Loads the pretrained model and corresponding tokenizer from huggingface, both indicated by the model_name, i.e. model_id. Function returns the tokenizer and the model. 
@@ -102,7 +123,7 @@ class Dataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.encodings["input_ids"])
 
-    
+
 def compute_metrics(p, log=logging):
     pred, labels = p
     pred = np.argmax(pred, axis=1)

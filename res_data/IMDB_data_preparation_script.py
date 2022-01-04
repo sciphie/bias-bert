@@ -1,11 +1,12 @@
 import sys, os
+sys.path.append('./..')
+from test_utils import check_path
 import pandas as pd
 import data_masking as masking
 
-import logging
-
 # where to safe data and tables? right here I suppose. Else modify 
 path = ""
+check_path(path + 'IMDB_training')
 
 ########################################################################################
 # Download IMDb Data
