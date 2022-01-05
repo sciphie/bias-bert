@@ -7,7 +7,7 @@ from transformers import TrainingArguments, Trainer
 from transformers import BertTokenizer, BertForSequenceClassification
 from transformers import EarlyStoppingCallback
 from os import walk
-import sys, os
+import sys, os, datetime
 
 # see https://huggingface.co/docs/transformers/main_classes/logging
 transformers.utils.logging.set_verbosity_info
@@ -22,10 +22,21 @@ root.addHandler(handler)
 
 if torch.cuda.is_available():
     logging.info('Current GPU device : ' + str(torch.cuda.current_device()))
+    print('Current GPU device : ' + str(torch.cuda.current_device()))
 else: 
     logging.warning('No GPU available')
+    print('No GPU available')
 
 
+def timestamp(time=False):
+    '''
+    I use this to always have a current time stamp
+    '''
+    if time: 
+        return datetime.datetime.now().strftime('%m/%d/%Y/%H%M')
+    else:
+        return datetime.datetime.now().strftime('%m/%d/%Y')
+    
 def check_path(path):
     '''
     check if the paths exists, else create 
@@ -74,7 +85,7 @@ def load_hf(model_id, load_model=True):
         else: 
             model_name = "distilbert-large-uncased"
         from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
-        print('successfully loaded ' + model_name + ' with DistilBertTokenizer, DistilBertForSequenceClassification')
+        print('successfully loaded {} with DistilBertTokenizer, DistilBertForSequenceClassification'.format(model_name))
         tokenizer = DistilBertTokenizer.from_pretrained(model_name)
         if load_model: 
             model = DistilBertForSequenceClassification.from_pretrained(model_name, num_labels=2)  
@@ -85,7 +96,7 @@ def load_hf(model_id, load_model=True):
         else: 
             model_name = "roberta-large"
         from transformers import RobertaTokenizer, RobertaForSequenceClassification
-        print('successfully loaded ' + model_name + ' with RobertaTokenizer, RobertaForSequenceClassification')
+        print('successfully loaded {} with RobertaTokenizer, RobertaForSequenceClassification'.format(model_name))
         tokenizer = RobertaTokenizer.from_pretrained(model_name)
         if load_model: 
             model = RobertaForSequenceClassification.from_pretrained(model_name, num_labels=2)  
@@ -96,7 +107,7 @@ def load_hf(model_id, load_model=True):
         else: 
             model_name = "albert-large-v2"
         from transformers import AlbertTokenizer, AlbertForSequenceClassification
-        print('successfully loaded ' + model_name + ' with AlbertTokenizer, AlbertForSequenceClassification')
+        print('successfully loaded {} with AlbertTokenizer, AlbertForSequenceClassification'.format(model_name))
         tokenizer = AlbertTokenizer.from_pretrained(model_name)
         if load_model: 
             model = AlbertForSequenceClassification.from_pretrained(model_name, num_labels=2)  
@@ -105,7 +116,7 @@ def load_hf(model_id, load_model=True):
     else:
         print("train_util:load_pretrained: model type not recognised by name")
         return None
-    return tokenizer, model     
+    return tokenizer, model
 
 
 # Create torch dataset
@@ -124,7 +135,7 @@ class Dataset(torch.utils.data.Dataset):
         return len(self.encodings["input_ids"])
 
 
-def compute_metrics(p, log=logging):
+def compute_metrics(p):# ,log=logging):
     pred, labels = p
     pred = np.argmax(pred, axis=1)
 
@@ -133,8 +144,7 @@ def compute_metrics(p, log=logging):
     precision = precision_score(y_true=labels, y_pred=pred)
     f1 = f1_score(y_true=labels, y_pred=pred)
     
-    log.info(__name__ + ": compute_metrics - " + "accuracy: " + str(accuracy) + "; precision: " + str(precision) + "; recall: " + str(recall) + "; f1: " + str(f1))
-
+    print("{} : compute_metrics - " + "accuracy: {}; precision: {}; recall: {}; f1: {}".format(__name__, accuracy, precision, recall, f1)
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
 
 
@@ -148,10 +158,10 @@ def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False
     
     # ----- Load test data -----#
     if restricted_test_set: 
-        print('calculate accuracy with RESTRICTED test_set')
+        print(timestamp(True) + 'calculate accuracy with RESTRICTED test_set')
         test_data = pd.read_pickle('../resources/' + task + '_training/' + task + '_' + spec + '_test')
     else:
-        print('calculate accuracy with ALL test samples')
+        print(timestamp(True)+ 'calculate accuracy with ALL test samples')
         test_data = pd.read_pickle('../resources/' + task + '_l_test')
     test_data.label = pd.factorize(test_data.label)[0]
     if 'text' in test_data.columns[1]:

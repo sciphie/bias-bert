@@ -1,47 +1,36 @@
 '''
 call this script with python train [task] [model_id] [spec], where task, model_od and spec need to be a valid string
 so e.g. python train "IMDB" "bert-base-uncased" "N_pro"
+If you want to train all specs for that task and base model call with spec = "all" (e.g. python train "IMDB" "bert-base-uncased" "all").
+if you'd like to process multiple specs but not all of them, you can also provide a list of specs (e.g. python train "IMDB" "bert-base-uncased" ["N_pro", "mix_weat"])
 '''
 
 import sys, os
 vars = sys.argv
 from os import walk
-import train_util as tu  
-specs = ["N_pro", "N_weat", "N_all", "mix_pro", "mix_weat", "mix_all", "original"]
+import train_util as tu
+from rtpt import RTPT
+import random
+import time
 
-assert(len(vars) == 3)
-if len(vars) != 3:
-    print("something's wrong with the parameters here. Check that, please.")
-    print("call this script with python train [task] [model_id] [spec], where task, model_od and spec need to be a valid string. So e.g. python train 'IMDB' 'bert-base-uncased' 'N_pro'")
-    sys.exit(1)
-else:
-    task = vars[0]
-    model_id = vars[1]
-    spec = vars[2]
-    print('called train.py {} {} {}'.format(task, model_id, spec))
-    
+assert(len(vars) == 3), "something's wrong with the parameters here. Check that, please. \n call this script with python train [task] [model_id] [spec], where task, model_od and spec need to be a valid string. So e.g. python train 'IMDB' 'bert-base-uncased' all"
+
+# now we know that we have the right amount of vars 
+task_in = vars[0]
+assert(task_in in ['IMDB', 'Twitter']), 'task name is not valid'
+model_id_in = vars[1]
+assert(model_id_in in ["bertbase", 'bertlarge', "distbase", "distlarge", "robertabase", "robertalarge", "albertbase", "albertlarge"]), model_id_in + ' is not a valid model_id'
+spec_in = vars[2]
+print('called train.py {} {} {}'.format(task_in, model_id_in, spec_in))
+
 ###
 
-def train(spec, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=3):  
+def train(task, model_id, spec, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=3):  
     '''
     todo
     '''
-    ### TODO : Fix mal den logger scheiß hier. ###
-    logger = logging.getLogger('tensorflow')
-    logger.setLevel(logging.INFO)
+    # I removed the logging block for the moment as I am not using it right now anyway 
     
-    #logger = logging.getLogger(task + '_' + model_id)
-    #logger.setLevel(logging.INFO)
-    
-    formatter = logging.Formatter(spec +"_"+ '%(asctime)s: %(levelname)s: %(name)s: %(message)s')
-    file_handler = logging.FileHandler("logs/log_" + task + "_" + model_id + ".log")
-    file_handler.setFormatter(formatter)
-    
-    file_handler.setLevel(logging.INFO)
-
-    logger.addHandler(file_handler) 
-    
-    #    logger.info(__name__ + ': train '+spec+ "; eval_steps="+str(eval_steps_)+ "; per_device_train_batch_size="+ str(per_device_train_batch_size_) +"; per_device_eval_batch_size="+ str(per_device_eval_batch_size_)+ "; num_train_epochs=" + str(num_train_epochs_)) 
     print('{}: params: spec= {}; eval_steps_={}; per_device_train_batch_size_={}; per_device_eval_batch_size_={}; num_train_epochs_={}'.format(__name__, spec, eval_steps_, per_device_train_batch_size_, per_device_eval_batch_size_, num_train_epochs_))
         
     ### ### ### ### ### 
@@ -93,15 +82,17 @@ def train(spec, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval
     trainer.train()
 
     
-def acc_df():
+def acc_df(task_, specs_)
     '''
     todo 
     '''
     df_acc = pd.DataFrame()
-    for spec in specs: 
-        foo = tu.calc_acc(spec, tokenizer, model_id, task, True)
+    for spec in specs_: 
+        rtpt.step('evaluate ' + spec)
+        
+        foo = tu.calc_acc(spec, tokenizer, model_id, task_, True)
         foo['data set'] = 'spec'    
-        bar = tu.calc_acc(spec, tokenizer, model_id, task, False)
+        bar = tu.calc_acc(spec, tokenizer, model_id, task_, False)
         bar['data set'] = 'all'
         foo['spec'] = spec
         bar['spec'] = spec
@@ -114,9 +105,25 @@ def acc_df():
 
 # model_id can be "bertbase", 'bertlarge', "distbase", "distlarge", "robertabase", "robertalarge", "albertbase", "albertlarge"
 tokenizer, model = tu.load_hf(model_id)
-    
-for spec in specs:
-    train(spec)
 
-df_acc_ = acc_df(task)
+specs_all = ["N_pro", "N_weat", "N_all", "mix_pro", "mix_weat", "mix_all", "original"]
+if spec_in == "all":
+    specs = specs_all
+elif type(spec_in)== list:
+    specs = spec_in
+elif type(spec_in)==str:
+    specs = [spec_in]
+for spec in specs: 
+    assert(spec in specs_all), '{} is no legit specification (spec)'.format(spec)
+    rtpt.step(subtitle=f"loss={loss:2.2f}")    
+
+    
+    
+
+rtpt_train = RTPT(name_initials='SJ' experiment_name='train {} {}'.format(task_in, model_id_in), max_iterations=len(specs)*2)
+for spec in specs:
+    train(task_in, model_id_in, spec)
+    rtpt.step('train ' + spec)
+
+df_acc_ = acc_df(task_in, specs)
 print(df_acc_) 
