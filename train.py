@@ -5,13 +5,17 @@ If you want to train all specs for that task and base model call with spec = "al
 if you'd like to process multiple specs but not all of them, you can also provide a list of specs (e.g. python train "IMDB" "bert-base-uncased" ["N_pro", "mix_weat"])
 '''
 
-import sys, os
-vars = sys.argv
+import sys, os, random, time
+import torch
+import pandas as pd
 from os import walk
-import train_util as tu
+#import train_util as tu
+from train_util import *
 from rtpt import RTPT
-import random
-import time
+#from sklearn.model_selection import train_test_split # this is in train_util
+
+vars = sys.argv[1:]
+print(vars)
 
 assert(len(vars) == 3), "something's wrong with the parameters here. Check that, please. \n call this script with python train [task] [model_id] [spec], where task, model_od and spec need to be a valid string. So e.g. python train 'IMDB' 'bert-base-uncased' all"
 
@@ -22,6 +26,10 @@ model_id_in = vars[1]
 assert(model_id_in in ["bertbase", 'bertlarge', "distbase", "distlarge", "robertabase", "robertalarge", "albertbase", "albertlarge"]), model_id_in + ' is not a valid model_id'
 spec_in = vars[2]
 print('called train.py {} {} {}'.format(task_in, model_id_in, spec_in))
+
+
+log_path = './res_models/logs/train_{}_{}_{}.txt'.format(task_in, model_id_in, timestamp(True)) # tu.
+sys.stdout = open(log_path, 'w')
 
 ###
 
@@ -53,10 +61,10 @@ def train(task, model_id, spec, eval_steps_=500, per_device_train_batch_size_=8,
     X_train_tokenized = tokenizer(X_train, padding=True, truncation=True, max_length=512)
     X_val_tokenized = tokenizer(X_val, padding=True, truncation=True, max_length=512)
     
-    train_dataset = tu.Dataset(X_train_tokenized, y_train)
-    val_dataset = tu.Dataset(X_val_tokenized, y_val)
+    train_dataset = Dataset(X_train_tokenized, y_train) # tu.
+    val_dataset = Dataset(X_val_tokenized, y_val) # tu.
     
-    output_path = tu.check_path('res_models/{}/{}/output_{}'.format(task, model_id, spec))
+    output_path = check_path('res_models/{}/{}/output_{}'.format(task, model_id, spec)) # tu.
 
     # Define Trainer
     args = TrainingArguments(
@@ -74,7 +82,7 @@ def train(task, model_id, spec, eval_steps_=500, per_device_train_batch_size_=8,
         args=args,
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
-        compute_metrics=tu.compute_metrics,
+        compute_metrics= compute_metrics, # tu.
         callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
     )
 
@@ -82,7 +90,7 @@ def train(task, model_id, spec, eval_steps_=500, per_device_train_batch_size_=8,
     trainer.train()
 
     
-def acc_df(task_, specs_)
+def acc_df(task_, specs_):
     '''
     todo 
     '''
@@ -90,21 +98,21 @@ def acc_df(task_, specs_)
     for spec in specs_: 
         rtpt.step('evaluate ' + spec)
         
-        foo = tu.calc_acc(spec, tokenizer, model_id, task_, True)
+        foo = calc_acc(spec, tokenizer, model_id, task_, True) # tu.
         foo['data set'] = 'spec'    
-        bar = tu.calc_acc(spec, tokenizer, model_id, task_, False)
+        bar = calc_acc(spec, tokenizer, model_id, task_, False) # tu.
         bar['data set'] = 'all'
         foo['spec'] = spec
         bar['spec'] = spec
         df_acc = df_acc.append(foo, ignore_index = True)
         df_acc = df_acc.append(bar, ignore_index = True)
-    df_acc.to_pickle(tu.check_path('res_models/accuracies/acc_' + task + '_' + model_id))
+    df_acc.to_pickle(check_path('res_models/accuracies/acc_' + task + '_' + model_id)) # tu.
     print('\n' + __name__+ ':')
     print(df_acc)
     return df_acc    
 
 # model_id can be "bertbase", 'bertlarge', "distbase", "distlarge", "robertabase", "robertalarge", "albertbase", "albertlarge"
-tokenizer, model = tu.load_hf(model_id)
+tokenizer, model = load_hf(model_id_in) # tu.
 
 specs_all = ["N_pro", "N_weat", "N_all", "mix_pro", "mix_weat", "mix_all", "original"]
 if spec_in == "all":
@@ -114,13 +122,10 @@ elif type(spec_in)== list:
 elif type(spec_in)==str:
     specs = [spec_in]
 for spec in specs: 
-    assert(spec in specs_all), '{} is no legit specification (spec)'.format(spec)
-    rtpt.step(subtitle=f"loss={loss:2.2f}")    
+    assert(spec in specs_all), '{} is no legit specification (spec)'.format(spec) 
 
-    
-    
 
-rtpt_train = RTPT(name_initials='SJ' experiment_name='train {} {}'.format(task_in, model_id_in), max_iterations=len(specs)*2)
+rtpt_train = RTPT(name_initials='SJ', experiment_name='train {} {}'.format(task_in, model_id_in), max_iterations=len(specs)*2)
 for spec in specs:
     train(task_in, model_id_in, spec)
     rtpt.step('train ' + spec)

@@ -9,6 +9,7 @@ from transformers import EarlyStoppingCallback
 from os import walk
 import sys, os, datetime
 
+
 # see https://huggingface.co/docs/transformers/main_classes/logging
 transformers.utils.logging.set_verbosity_info
 transloggers = transformers.utils.logging.get_logger
@@ -34,9 +35,9 @@ def timestamp(time=False):
     I use this to always have a current time stamp
     '''
     if time: 
-        return datetime.datetime.now().strftime('%m/%d/%Y/%H%M')
+        return datetime.datetime.now().strftime('%m_%d_%H%M')
     else:
-        return datetime.datetime.now().strftime('%m/%d/%Y')
+        return datetime.datetime.now().strftime('%m_%d_%Y')
     
 def check_path(path):
     '''
