@@ -1,6 +1,6 @@
 import sys, os
 sys.path.append('./..')
-from test_utils import check_path
+from train_util import check_path
 import pandas as pd
 import data_masking as masking
 
