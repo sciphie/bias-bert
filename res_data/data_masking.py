@@ -1,5 +1,5 @@
 # Standard imports 
-import logging, re, pickle, os, spacy, nltk, random, en_core_web_sm
+import logging, re, pickle, os, nltk, random #, en_core_web_sm, spacy
 logging.basicConfig(level=logging.INFO)
 from term_lists import *
 
@@ -67,28 +67,28 @@ def make_all_df(df):
     df["count_weat"] = [sum(e.values()) for e in df["count_table_weat"].tolist()]
     df["count_prons"] = [sum([e[pronoun] for pronoun in all_prons]) for e in df["count_table"].tolist()] 
     df["len"] = [len(e.split()) for e in texts]
-    logging.info(' make_all_df: finish counts and length')
+    print(' make_all_df: finish counts and length')
     # ---
     df["text_all_M"] = [mask_byDict(e, terms_f2m) for e in texts]
-    logging.info(' make_all_df: finish text_all_M')
+    print(' make_all_df: finish text_all_M')
     df["text_all_F"] = [mask_byDict(e, terms_m2f) for e in texts]
-    logging.info(' make_all_df: finish text_all_F')
+    print(' make_all_df: finish text_all_F')
     df["text_all_N"] = [make_neutral(e, all_terms)for e in texts]
-    logging.info(' make_all_df: finish text_all_N')
+    print(' make_all_df: finish text_all_N')
     # ---
     df["text_weat_M"] = [mask_byDict(e, weat_f2m) for e in texts]
-    logging.info(' make_all_df: finish text_weat_M')
+    print(' make_all_df: finish text_weat_M')
     df["text_weat_F"] = [mask_byDict(e, weat_m2f) for e in texts]
-    logging.info(' make_all_df: finish text_weat_F')
+    print(' make_all_df: finish text_weat_F')
     df["text_weat_N"] = [make_neutral(e, all_weat) for e in texts]
-    logging.info(' make_all_df: finish text_weat_N')
+    print(' make_all_df: finish text_weat_N')
     # ---
     df["text_pro_M"] = [mask_byDict(e, prons_f2m) for e in texts]
-    logging.info(' make_all_df: finish text_pro_M')
+    print(' make_all_df: finish text_pro_M')
     df["text_pro_F"] = [mask_byDict(e, prons_m2f) for e in texts]
-    logging.info(' make_all_df: finish text_pro_F')
+    print(' make_all_df: finish text_pro_F')
     df["text_pro_N"] = [make_neutral(e, all_prons) for e in texts]
-    logging.info(' make_all_df: finish text_pro_N')
+    print(' make_all_df: finish text_pro_N')
     
 def check_df(foo): 
     c1 = all(foo[foo['count_total'] >= foo['count_weat']])
@@ -102,7 +102,7 @@ def check_df(foo):
     c7 = all([x >= y for x,y in list(zip( foo['len'].tolist(), [len(s.split()) for s in foo['text_weat_N'].tolist()] ))]) 
     c8 = all([x >= y for x,y in list(zip( foo['len'].tolist(), [len(s.split()) for s in foo['text_pro_N'].tolist()] ))]) 
     if c1 and c2 and c4 and c5 and c6 and c7 and c8:
-        logging.info('all tests ok')
+        print('all tests ok')
         print('tested dataframe - everything is fine')
     else:
         logging.error('something is wrong in your DataFrame') 
@@ -115,7 +115,7 @@ def check_df(foo):
 # ------------------------------------ Names ---------------------------------------------------- #
 # Todo: NER does not work properly. So macht das keinen Sinn. 
 # Not used in the latest implementation
-
+'''
 def mask_names_list(text_ls, names_a=m_names, names_b=f_names):
     male_text = []    # Create empty column for male reviews
     female_text = []    # Create empty column for female reviews
@@ -231,3 +231,5 @@ def remove_names_TW(new_df):
     #logging.info('one done')
     logging.info('masking names in frame: names have been masked in ' + str(replaced_names_all) + ' of ' + str(new_df.shape[0]) + ' samples.')
 #    return new_df, masked_ids, replaced_names_all
+
+'''

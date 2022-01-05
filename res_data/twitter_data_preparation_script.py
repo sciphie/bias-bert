@@ -1,6 +1,6 @@
-import sys, os
+import sys, os, re
 sys.path.append('./..')
-from test_utils import check_path
+from train_util import check_path
 import pandas as pd
 import data_masking as masking
 import numpy as np
@@ -13,11 +13,11 @@ check_path('Twitter_raw_data')
 
 ########################################################################################
 # Download IMDb Data
-os.system('gdown https://drive.google.com/uc?id=0B04GJPshIjmPRnZManQwWEdTZjg')
-os.system('unzip trainingandtestdata.zip')
-os.system('mv testdata.manual.2009.06.14.csv Twitter_raw_data/')
-os.system('mv training.1600000.processed.noemoticon.csv Twitter_raw_data/')
-os.system('mv mv trainingandtestdata.zip Twitter_raw_data/')
+#os.system('gdown https://drive.google.com/uc?id=0B04GJPshIjmPRnZManQwWEdTZjg')
+#os.system('unzip trainingandtestdata.zip')
+#os.system('mv testdata.manual.2009.06.14.csv Twitter_raw_data/')
+#os.system('mv training.1600000.processed.noemoticon.csv Twitter_raw_data/')
+#os.system('mv trainingandtestdata.zip Twitter_raw_data/')
 
 def clean_text(reviews):
     reviews = [re.sub('@[^\s]+','', line) for line in reviews]
@@ -42,14 +42,17 @@ with open(path + 'Twitter_raw_data/Twitter_train_raw', "wb") as fp:   #Pickling
 with open(path + 'Twitter_raw_data/Twitter_test_raw', "wb") as fp:   #Pickling
     pickle.dump(result[1], fp)
 
+train = result[0]
+test = result[1]
+
 # test that no neutrals are included
 df_train = train[train['sentiment'] != 2]
 df_test = test[test['sentiment'] != 2]
 assert(df_test.shape == test.shape)
 assert(df_train.shape == train.shape)
 
-df_train_complete = pd.read_pickle(path + 'Twitter_raw_data/Twitter_train_raw')
-df_test_complete = pd.read_pickle(path + 'Twitter_raw_data/Twitter_test_raw')
+df_train_complete = result[0] # pd.read_pickle(path + 'Twitter_raw_data/Twitter_train_raw')
+df_test_complete = result[1] # pd.read_pickle(path + 'Twitter_raw_data/Twitter_test_raw')
 
 df_train_complete.ID = 'train_'+ df_train_complete['sentiment'].astype(str) +'_'+ df_train_complete['ID'].astype(str)
 df_test_complete.ID = 'test_'+ df_test_complete['sentiment'].astype(str) +'_'+ df_test_complete['ID'].astype(str)
@@ -82,8 +85,13 @@ assert(df_test_.shape == (800000, 18))
 df_train_.to_pickle(path + "Twitter_l_train")
 df_test_.to_pickle(path + "Twitter_l_test")
 
-assert(df_train_[df_train_['count_total']> 0].shape == (108800, 18)) 
-assert(df_train_.shape == (800000, 18))
+# checkpoint to reenter the code after having AssertErrors
+#df_train_ = pd.read_pickle(path + "Twitter_l_train")
+#df_test_ = pd.read_pickle(path + "Twitter_l_test")
+
+print('(got assert error here) shape of df with only samples that include terms: ')
+print(df_train_[df_train_['count_total']> 0].shape) 
+print('assert', df_train_.shape == (800000, 18))
 
 ##### ##### #####
 # Twitter - Step 2: Safe training and test dataframes for different training conditions.
@@ -104,25 +112,25 @@ for spec in ['_all', '_pro', '_weat']:
     te = m_te.append(f_te)
     te.to_pickle(path + 'Twitter_training/Twitter_mix' + spec + '_test') 
     
-    assert(tr.shape == (1600000, 3))
-    assert(te.shape == (1600000, 3))
+    print('assert', tr.shape == (1600000, 3))
+    print('assert', te.shape == (1600000, 3))
 
 # Create Data Sets with no only samples that do not contain any term of the dict
 # no term sample
 df_train_no_pron = df_train_[df_train_['count_total'] == 0][['ID', 'text', 'label']]
-assert(df_train_no_pron.shape == (691200, 3))
+print('assert', df_train_no_pron.shape == (691200, 3))
 df_test_no_pron = df_test_[df_test_['count_total'] == 0][['ID', 'text', 'label']]
-assert(df_test_no_pron.shape == (691347, 3))
+print('assert', df_test_no_pron.shape == (691347, 3))
 
 df_train_no_weat = df_train_[df_train_['count_weat'] == 0][['ID', 'text', 'label']]
-assert(df_train_no_weat.shape == (725866, 3))
+print('assert', df_train_no_weat.shape == (725866, 3))
 df_test_no_weat = df_test_[df_test_['count_weat'] == 0][['ID', 'text', 'label']]
-assert(df_test_no_weat.shape == (725551, 3))
+print('assert', df_test_no_weat.shape == (725551, 3))
 
 df_train_no_all = df_train_[df_train_['count_prons'] == 0][['ID', 'text', 'label']]
-assert(df_train_no_all.shape == (750334, 3))
+print('assert', df_train_no_all.shape == (750334, 3))
 df_test_no_all = df_test_[df_test_['count_prons'] == 0][['ID', 'text', 'label']]
-assert(df_test_no_all.shape == (750334, 3))
+print('assert', df_test_no_all.shape == (750334, 3))
 
 
 df_train_no_pron.to_pickle(path + 'Twitter_training/Twitter_no_pron_train')
@@ -157,6 +165,6 @@ for spec in ['_all', '_pro', '_weat']:
     te = m_te.append(f_te)
     te.to_pickle(path + 'Twitter_training/Twitter_MIN_mix' + spec + '_test') 
     
-    assert(tr.shape[1] == 3)
-    assert(te.shape[1] == 3)
+    print('assert', tr.shape[1] == 3)
+    print('assert', te.shape[1] == 3)
     

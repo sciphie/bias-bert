@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-import torch, logging
+import torch, logging, transformers 
 from transformers import TrainingArguments, Trainer
 from transformers import BertTokenizer, BertForSequenceClassification
 from transformers import EarlyStoppingCallback
@@ -17,7 +17,8 @@ handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
-root.addHandler(handler)
+logger = logging.getLogger()
+logger.addHandler(handler)
 
 
 if torch.cuda.is_available():
@@ -144,7 +145,7 @@ def compute_metrics(p):# ,log=logging):
     precision = precision_score(y_true=labels, y_pred=pred)
     f1 = f1_score(y_true=labels, y_pred=pred)
     
-    print("{} : compute_metrics - " + "accuracy: {}; precision: {}; recall: {}; f1: {}".format(__name__, accuracy, precision, recall, f1)
+    print("{} : compute_metrics - " + "accuracy: {}; precision: {}; recall: {}; f1: {}".format(__name__, accuracy, precision, recall, f1))
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
 
 

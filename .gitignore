@@ -9,6 +9,8 @@ res_data/IMDB_l_test
 res_data/IMDB_l_train
 res_data/IMDB_prepare.ipynb
 res_data/Twitter_prepare.ipynb
+res_data/Twitter_l_test
+res_data/Twitter_l_train
 
 .ipynb_checkpoints/
 res_data/.ipynb_checkpoints/
