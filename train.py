@@ -16,6 +16,9 @@ from rtpt import RTPT
 
 vars = sys.argv[1:]
 print(vars)
+print(type(vars[2]))
+print(len(vars))
+
 
 assert(len(vars) == 3), "something's wrong with the parameters here. Check that, please. \n call this script with python train [task] [model_id] [spec], where task, model_od and spec need to be a valid string. So e.g. python train 'IMDB' 'bert-base-uncased' all"
 
@@ -24,7 +27,8 @@ task_in = vars[0]
 assert(task_in in ['IMDB', 'Twitter']), 'task name is not valid'
 model_id_in = vars[1]
 assert(model_id_in in ["bertbase", 'bertlarge', "distbase", "distlarge", "robertabase", "robertalarge", "albertbase", "albertlarge"]), model_id_in + ' is not a valid model_id'
-spec_in = vars[2]
+spec_in = vars[2].split()
+print(spec_in)
 print('called train.py {} {} {}'.format(task_in, model_id_in, spec_in))
 
 
@@ -120,15 +124,17 @@ if spec_in == "all":
 elif type(spec_in)== list:
     specs = spec_in
 elif type(spec_in)==str:
-    specs = [spec_in]
+    assert(type(spec_in)==list), "spec is not a list here. This will cause issues later." 
+    specs = spec_in
 for spec in specs: 
-    assert(spec in specs_all), '{} is no legit specification (spec)'.format(spec) 
+    assert(spec in specs_all), '{} is no legit specification (spec)'.format(spec)
 
-
+    
 rtpt_train = RTPT(name_initials='SJ', experiment_name='train {} {}'.format(task_in, model_id_in), max_iterations=len(specs)*2)
 for spec in specs:
     train(task_in, model_id_in, spec)
-    rtpt_train.step('train ' + spec)
+    rtpt_train.step(subtitle=f"train")
+
 
 df_acc_ = acc_df(task_in, specs)
 print(df_acc_) 
