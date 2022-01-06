@@ -96,7 +96,7 @@ def acc_df(task_, specs_):
     '''
     df_acc = pd.DataFrame()
     for spec in specs_: 
-        rtpt.step('evaluate ' + spec)
+        rtpt_train.step('evaluate ' + spec)
         
         foo = calc_acc(spec, tokenizer, model_id, task_, True) # tu.
         foo['data set'] = 'spec'    
@@ -128,7 +128,7 @@ for spec in specs:
 rtpt_train = RTPT(name_initials='SJ', experiment_name='train {} {}'.format(task_in, model_id_in), max_iterations=len(specs)*2)
 for spec in specs:
     train(task_in, model_id_in, spec)
-    rtpt.step('train ' + spec)
+    rtpt_train.step('train ' + spec)
 
 df_acc_ = acc_df(task_in, specs)
 print(df_acc_) 

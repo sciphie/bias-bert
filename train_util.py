@@ -146,7 +146,7 @@ def compute_metrics(p):# ,log=logging):
     precision = precision_score(y_true=labels, y_pred=pred)
     f1 = f1_score(y_true=labels, y_pred=pred)
     
-    print("{} : compute_metrics - " + "accuracy: {}; precision: {}; recall: {}; f1: {}".format(__name__, accuracy, precision, recall, f1))
+    print("{} : compute_metrics - " + "accuracy: {}; precision: {}; recall: {}; f1: {}".format(timestamp(True), accuracy, precision, recall, f1))
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
 
 
