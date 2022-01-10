@@ -19,8 +19,9 @@ Train the models with train.py. The script is called with three variables, which
 
 
 ### possible variables
-spec are `"N_pro"`, `"N_weat"`, `"N_all"`, `"mix_pro"`, `"mix_weat"`, `"mix_all"`, `"original"`;  
-model_id can be `"bertbase"`, `"bertlarge"`, `"distbase"`, `"distlarge"`, `"robertabase"`, `"robertalarge"`, `"albertbase"`, `"albertlarge"`, which correspond to the pretrained [Hugging Face Models](https://huggingface.co/models) `bert-base-uncased`, `bert-large-uncased`, `distilbert-base-uncased`, `distilbert-large-uncased`, `roberta-base`, `roberta-large`, `albert-base-v2`, `albert-large-v2`.   
+specs are `"N_pro"`, `"N_weat"`, `"N_all"`, `"mix_pro"`, `"mix_weat"`, `"mix_all"`, `"original"`;  
+model_id can be `"bertbase"`, `"bertlarge"`, `"distbase"`, `"distlarge"`, `"robertabase"`, `"robertalarge"`, `"albertbase"`, `"albertlarge"`,  
+which correspond to the pretrained [Hugging Face Models](https://huggingface.co/models) `bert-base-uncased`, `bert-large-uncased`, `distilbert-base-uncased`, `distilbert-large-uncased`, `roberta-base`, `roberta-large`, `albert-base-v2`, `albert-large-v2`.   
 
 ### Rate Experimentatl Samples 
 
