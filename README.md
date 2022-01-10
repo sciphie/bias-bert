@@ -5,7 +5,7 @@ clone repository and cd into bias-bert
 install requirements.txt in your environment  
 
 ### get and prepare data 
-'python res_data/IMDB_data_preparation_script.py | tee data_preparation.txt'  
+`python res_data/IMDB_data_preparation_script.py | tee data_preparation.txt`  
 python cd res_data/twitter_data_preparation_script.py | tee data_preparation.txt  
 
 ### train
