@@ -32,8 +32,8 @@ print(spec_in)
 print('called train.py {} {} {}'.format(task_in, model_id_in, spec_in))
 
 
-log_path = './res_models/logs/train_{}_{}_{}.txt'.format(task_in, model_id_in, timestamp(True)) # tu.
-sys.stdout = open(log_path, 'w')
+log_path = './res_models/logs/train_{}_{}_{}.txt'.format(task_in, model_id_in, timestamp()) # tu.
+sys.stdout = open(log_path, 'a')
 
 ###
 
@@ -94,7 +94,7 @@ def train(task, model_id, spec, eval_steps_=500, per_device_train_batch_size_=8,
     trainer.train()
 
     
-def acc_df(task_, specs_):
+def acc_df(task_, model_id_, specs_):
     '''
     todo 
     '''
@@ -102,39 +102,45 @@ def acc_df(task_, specs_):
     for spec in specs_: 
         rtpt_train.step('evaluate ' + spec)
         
-        foo = calc_acc(spec, tokenizer, model_id, task_, True) # tu.
+        foo = calc_acc(spec, tokenizer, model_id_, task_, True) # tu.
         foo['data set'] = 'spec'    
-        bar = calc_acc(spec, tokenizer, model_id, task_, False) # tu.
+        bar = calc_acc(spec, tokenizer, model_id_, task_, False) # tu.
         bar['data set'] = 'all'
         foo['spec'] = spec
         bar['spec'] = spec
         df_acc = df_acc.append(foo, ignore_index = True)
         df_acc = df_acc.append(bar, ignore_index = True)
-    df_acc.to_pickle(check_path('res_models/accuracies/acc_' + task + '_' + model_id)) # tu.
-    print('\n' + __name__+ ':')
+        print(df_acc) # delete when everything works fine 
     print(df_acc)
+    df_acc.to_pickle(check_path('res_models/accuracies/') + 'acc_{}_{}'.format(task_, model_id_)) # tu.
+    print('\n' + __name__+ ':')
     return df_acc    
 
 # model_id can be "bertbase", 'bertlarge', "distbase", "distlarge", "robertabase", "robertalarge", "albertbase", "albertlarge"
 tokenizer, model = load_hf(model_id_in) # tu.
 
 specs_all = ["N_pro", "N_weat", "N_all", "mix_pro", "mix_weat", "mix_all", "original"]
-if spec_in == "all":
+if spec_in == ["all"]:
     specs = specs_all
+    print('1#')
 elif type(spec_in)== list:
     specs = spec_in
+    print('12')
 elif type(spec_in)==str:
     assert(type(spec_in)==list), "spec is not a list here. This will cause issues later." 
     specs = spec_in
+    print('13')
 for spec in specs: 
     assert(spec in specs_all), '{} is no legit specification (spec)'.format(spec)
 
     
-rtpt_train = RTPT(name_initials='SJ', experiment_name='train {} {}'.format(task_in, model_id_in), max_iterations=len(specs)*2)
+rtpt_train = RTPT(name_initials='SJ', experiment_name=task_in, max_iterations=len(specs)*2)
+rtpt_train .start()
+
 for spec in specs:
     train(task_in, model_id_in, spec)
     rtpt_train.step(subtitle=f"train")
 
 
-df_acc_ = acc_df(task_in, specs)
-print(df_acc_) 
+df_acc_ = acc_df(task_in, model_id_in, specs)
+# print(df_acc_) 

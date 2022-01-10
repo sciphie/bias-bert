@@ -4,9 +4,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 import torch, logging, transformers 
 from transformers import TrainingArguments, Trainer
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import BertTokenizer, BertForSequenceClassification, DistilBertForSequenceClassification
 from transformers import EarlyStoppingCallback
-from os import walk
+from glob import glob
 import sys, os, datetime
 
 
@@ -49,7 +49,7 @@ def check_path(path):
     return path
 
 
-def load_hf(model_id, load_model=True):
+def load_hf(model_id, load_model=True, path_to_model=None):
     '''
     Loads the pretrained model and corresponding tokenizer from huggingface, both indicated by the model_name, i.e. model_id. Function returns the tokenizer and the model. 
     If load_model==False 
@@ -65,50 +65,63 @@ def load_hf(model_id, load_model=True):
     --- Todo --- #model_name, model_id = "gpt2", "gpt2"
         '''
     model = None
-    from transformers import BertForSequenceClassification
     
-    if model_id == "bertbase": #"bert-base-uncased"
-        from transformers import BertTokenizer
+    # bertbase 
+    if model_id == "bertbase" or model_id == "bertlarge": #"bert-base-uncased"
+        from transformers import BertTokenizer, BertForSequenceClassification
         print('successfully loaded bert-base-uncased with BertTokenizer, BertForSequenceClassification')
-        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        if path_to_model: 
+            return BertForSequenceClassification.from_pretrained(path_to_model, num_labels=2)
+            print('Function should end here. Something is going wrong')
+        elif model_id == "bertlarge":
+            model_name = "bert-large-uncased"
+        else:
+            model_name = "bert-base-uncased"
+        tokenizer = BertTokenizer.from_pretrained(model_name)
         if load_model: 
             model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=2)    
-    
-    elif model_id == "bertlarge": #"bert-large-uncased"
-        from transformers import BertTokenizer
-        print('successfully loaded bert-large-uncased with BertTokenizer, BertForSequenceClassification')
-        tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
-        if load_model: 
-            model = BertForSequenceClassification.from_pretrained("bert-large-uncased", num_labels=2)     
+  
     # distilbert
     elif model_id == "distbase" or model_id == "distlarge":
+        from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+        if path_to_model: 
+            return DistilBertForSequenceClassification.from_pretrained(path_to_model, num_labels=2)
+            print('Function should end here. Something is going wrong')
         if model_id == "distbase": 
             model_name = "distilbert-base-uncased"
         else: 
             model_name = "distilbert-large-uncased"
-        from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+       
         print('successfully loaded {} with DistilBertTokenizer, DistilBertForSequenceClassification'.format(model_name))
         tokenizer = DistilBertTokenizer.from_pretrained(model_name)
         if load_model: 
             model = DistilBertForSequenceClassification.from_pretrained(model_name, num_labels=2)  
     # roberta 
     elif model_id == "robbase" or model_id == "roblarge":
+        from transformers import RobertaTokenizer, RobertaForSequenceClassification
+        if path_to_model: 
+            return RobertaForSequenceClassification.from_pretrained(path_to_model, num_labels=2)
+            print('Function should end here. Something is going wrong')
         if model_id == "robertabase": 
             model_name = "roberta-base"
         else: 
             model_name = "roberta-large"
-        from transformers import RobertaTokenizer, RobertaForSequenceClassification
+        
         print('successfully loaded {} with RobertaTokenizer, RobertaForSequenceClassification'.format(model_name))
         tokenizer = RobertaTokenizer.from_pretrained(model_name)
         if load_model: 
             model = RobertaForSequenceClassification.from_pretrained(model_name, num_labels=2)  
     # Albert
     elif model_id == "albertbase" or model_id == "albertlarge":
+        from transformers import AlbertTokenizer, AlbertForSequenceClassification
+        if path_to_model: 
+            return AlbertForSequenceClassification.from_pretrained(path_to_model, num_labels=2)
+            print('Function should end here. Something is going wrong')                                                                  
         if model_id == "albertbase": 
             model_name = "albert-base-v2"
         else: 
             model_name = "albert-large-v2"
-        from transformers import AlbertTokenizer, AlbertForSequenceClassification
+        
         print('successfully loaded {} with AlbertTokenizer, AlbertForSequenceClassification'.format(model_name))
         tokenizer = AlbertTokenizer.from_pretrained(model_name)
         if load_model: 
@@ -146,25 +159,31 @@ def compute_metrics(p):# ,log=logging):
     precision = precision_score(y_true=labels, y_pred=pred)
     f1 = f1_score(y_true=labels, y_pred=pred)
     
-    print("{} : compute_metrics - " + "accuracy: {}; precision: {}; recall: {}; f1: {}".format(timestamp(True), accuracy, precision, recall, f1))
+    print("{} : compute_metrics - accuracy: {}; precision: {}; recall: {}; f1: {}".format(timestamp(True), accuracy, precision, recall, f1))
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
 
 
 def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False, log=logging):
     # ----- Load trained model -----#   
-    filenames = next(walk("finetuning_"+ model_id + "/output_"+spec), (None, [], None))[1]  # [] if no file
+    path_ = "res_models/{}/{}/output_{}/".format(task, model_id, spec)
+    print(path_)
+    #filenames = next(walk(path_), (None, [], None))[1]  # [] if no file
+    filenames = glob(path_ + '*')
     filenames.reverse()
+    print(filenames)
+    print('#################')
     print(filenames[0])    
-    model_path = "finetuning_"+ model_id + "/output_" + spec + "/" + filenames[0]
-    model = BertForSequenceClassification.from_pretrained(model_path, num_labels=2) 
+    model_path = filenames[0]
+    print(model_path)
+    model = load_hf(model_id, path_to_model=model_path) # DistilBertForSequenceClassification.from_pretrained(, num_labels=2) 
     
     # ----- Load test data -----#
     if restricted_test_set: 
         print(timestamp(True) + 'calculate accuracy with RESTRICTED test_set')
-        test_data = pd.read_pickle('../resources/' + task + '_training/' + task + '_' + spec + '_test')
+        test_data = pd.read_pickle('res_data/{}_training/{}_{}_test'.format(task,task,spec))
     else:
         print(timestamp(True)+ 'calculate accuracy with ALL test samples')
-        test_data = pd.read_pickle('../resources/' + task + '_l_test')
+        test_data = pd.read_pickle('res_data/' + task + '_l_test')
     test_data.label = pd.factorize(test_data.label)[0]
     if 'text' in test_data.columns[1]:
         test_data.rename(columns={test_data.columns[1]:'text'}, inplace=True)
