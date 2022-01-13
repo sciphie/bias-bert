@@ -2,13 +2,17 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-import torch, logging, transformers 
-from transformers import TrainingArguments, Trainer
-from transformers import BertTokenizer, BertForSequenceClassification, DistilBertForSequenceClassification
-from transformers import EarlyStoppingCallback
+import torch, logging, transformers, sys, os, datetime
+from transformers import ( 
+    TrainingArguments, 
+    Trainer,
+    BertTokenizer, 
+    BertForSequenceClassification,
+    DistilBertForSequenceClassification,
+    EarlyStoppingCallback,
+)
 from glob import glob
-import sys, os, datetime
-
+ 
 
 # see https://huggingface.co/docs/transformers/main_classes/logging
 transformers.utils.logging.set_verbosity_info
@@ -71,6 +75,7 @@ def load_hf(model_id, load_model=True, path_to_model=None):
         from transformers import BertTokenizer, BertForSequenceClassification
         print('successfully loaded bert-base-uncased with BertTokenizer, BertForSequenceClassification')
         if path_to_model: 
+            print(path_to_model) 
             return BertForSequenceClassification.from_pretrained(path_to_model, num_labels=2)
             print('Function should end here. Something is going wrong')
         elif model_id == "bertlarge":
@@ -163,7 +168,7 @@ def compute_metrics(p):# ,log=logging):
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
 
 
-def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False, log=logging):
+def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False):
     # ----- Load trained model -----#   
     path_ = "res_models/{}/{}/output_{}/".format(task, model_id, spec)
     print(path_)
@@ -188,7 +193,8 @@ def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False
     if 'text' in test_data.columns[1]:
         test_data.rename(columns={test_data.columns[1]:'text'}, inplace=True)
     else:
-        log.error(__name__ + ": compute_metrics - " + 'wrong column renamed. This is not the text column')          
+        print("ERROR: compute_metrics - wrong column renamed. This is not the text column")
+        # log.error(__name__ + ": compute_metrics - " + 'wrong column renamed. This is not the text column')          
         
     # ----- Predict -----#
     X_test = list(test_data["text"])
@@ -204,6 +210,70 @@ def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False
     raw_pred, _, _ = test_trainer.predict(test_dataset)
     
     return(compute_metrics([raw_pred,list(test_data["label"])]))
+
+
+
+def train(task, model_id, spec, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=3):  
+    '''
+    todo
+    '''
+    # I removed the logging block for the moment as I am not using it right now anyway 
+    
+    print('{}: params: spec= {}; eval_steps_={}; per_device_train_batch_size_={}; per_device_eval_batch_size_={}; num_train_epochs_={}'.format(__name__, spec, eval_steps_, per_device_train_batch_size_, per_device_eval_batch_size_, num_train_epochs_))
+    
+    ### ### ### ### ###
+    
+    tokenizer, model = load_hf(model_id)
+        
+    ### ### ### ### ### 
+    # load data set
+    data_set_path = 'res_data/{}_training/{}_{}_'.format(task, task, spec)
+    df_train = pd.read_pickle(data_set_path+'train')
+    df_test = pd.read_pickle(data_set_path+'test')
+    
+    print(__name__ +': successfully loaded --- ' + data_set_path)
+    
+    # modify data sets 
+    for df in [df_train, df_test]:
+        df.label = pd.factorize(df.label)[0]
+        df.rename(columns={df.columns[1]:'text'}, inplace=True)
+    
+    X = list(df_train["text"])
+    y = list(df_train["label"])
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=11)
+    
+    X_train_tokenized = tokenizer(X_train, padding=True, truncation=True, max_length=512)
+    X_val_tokenized = tokenizer(X_val, padding=True, truncation=True, max_length=512)
+    
+    train_dataset = Dataset(X_train_tokenized, y_train) # tu.
+    val_dataset = Dataset(X_val_tokenized, y_val) # tu.
+    
+    output_path = check_path('res_models/{}/{}/output_{}'.format(task, model_id, spec)) # tu.
+
+    # Define Trainer
+    args = TrainingArguments(
+        output_dir=output_path,
+        evaluation_strategy="steps",
+        eval_steps=eval_steps_, #500,
+        per_device_train_batch_size=per_device_train_batch_size_, #8,
+        per_device_eval_batch_size=per_device_eval_batch_size_, # 8,
+        num_train_epochs=num_train_epochs_ ,#3,
+        seed=0,
+        load_best_model_at_end=True,
+    )
+    trainer = Trainer(
+        model=model,
+        args=args,
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
+        compute_metrics= compute_metrics, # tu.
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
+    )
+
+    # Train pre-trained model
+    trainer.train()
+
+
 
 '''
     y_pred = np.argmax(raw_pred, axis=1)
