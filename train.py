@@ -14,7 +14,7 @@ if you'd like to process multiple specs but not all of them, you can also provid
 
 # I think I do not need any more Imports. All are included in train_util
 
-from train_script import *
+from train_functions import *
 from rtpt import RTPT
 
 vars = sys.argv[1:]
@@ -39,10 +39,13 @@ sys.stdout = open(log_path, 'a')
 ###
 
     
-def acc_df(task_, model_id_, specs_):
+def acc_df(task_, model_id_, specs_, tokenizer=None):
     '''
     todo 
     '''
+    ### ### ### ### ###
+    if not tokenizer:
+        tokenizer, _ = load_hf(model_id, load_model=False)
     df_acc = pd.DataFrame()
     for spec in specs_: 
         rtpt_train.step('evaluate ' + spec)
@@ -64,6 +67,7 @@ def acc_df(task_, model_id_, specs_):
 # model_id can be "bertbase", 'bertlarge', "distbase", "distlarge", "robertabase", "robertalarge", "albertbase", "albertlarge"
 # tokenizer, model = load_hf(model_id_in) # tu.
 
+### determine specs ###
 specs_all = ["N_pro", "N_weat", "N_all", "mix_pro", "mix_weat", "mix_all", "original"]
 if spec_in == ["all"]:
     specs = specs_all
@@ -78,14 +82,17 @@ elif type(spec_in)==str:
 for spec in specs: 
     assert(spec in specs_all), '{} is no legit specification (spec)'.format(spec)
 
+### model and tokenizer ###
+# load tokenizer and model here, to avoid redundant loading in different functions 
+tokenizer_curr, model_curr  = load_hf(model_id_in)
     
 rtpt_train = RTPT(name_initials='SJ', experiment_name=task_in, max_iterations=len(specs)*2)
 rtpt_train .start()
 
 for spec in specs:
-    train(task_in, model_id_in, spec)
+    train(task_in, model_id_in, spec, tokenizer=tokenizer_curr, model=model_curr)
     rtpt_train.step(subtitle=f"train")
 
 
-df_acc_ = acc_df(task_in, model_id_in, specs)
+df_acc_ = acc_df(task_in, model_id_in, specs,tokenizer=tokenizer_curr)
 # print(df_acc_) 

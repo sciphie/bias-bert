@@ -75,7 +75,7 @@ def load_hf(model_id, load_model=True, path_to_model=None):
         from transformers import BertTokenizer, BertForSequenceClassification
         print('successfully loaded bert-base-uncased with BertTokenizer, BertForSequenceClassification')
         if path_to_model: 
-            print(path_to_model) 
+            print('load model from ' + path_to_model) 
             return BertForSequenceClassification.from_pretrained(path_to_model, num_labels=2)
             print('Function should end here. Something is going wrong')
         elif model_id == "bertlarge":
@@ -89,7 +89,8 @@ def load_hf(model_id, load_model=True, path_to_model=None):
     # distilbert
     elif model_id == "distbase" or model_id == "distlarge":
         from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
-        if path_to_model: 
+        if path_to_model:
+            print('load model from ' + path_to_model) 
             return DistilBertForSequenceClassification.from_pretrained(path_to_model, num_labels=2)
             print('Function should end here. Something is going wrong')
         if model_id == "distbase": 
@@ -105,6 +106,7 @@ def load_hf(model_id, load_model=True, path_to_model=None):
     elif model_id == "robbase" or model_id == "roblarge":
         from transformers import RobertaTokenizer, RobertaForSequenceClassification
         if path_to_model: 
+            print('load model from ' + path_to_model) 
             return RobertaForSequenceClassification.from_pretrained(path_to_model, num_labels=2)
             print('Function should end here. Something is going wrong')
         if model_id == "robertabase": 
@@ -120,6 +122,7 @@ def load_hf(model_id, load_model=True, path_to_model=None):
     elif model_id == "albertbase" or model_id == "albertlarge":
         from transformers import AlbertTokenizer, AlbertForSequenceClassification
         if path_to_model: 
+            print('load model from ' + path_to_model) 
             return AlbertForSequenceClassification.from_pretrained(path_to_model, num_labels=2)
             print('Function should end here. Something is going wrong')                                                                  
         if model_id == "albertbase": 
@@ -213,7 +216,7 @@ def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False
 
 
 
-def train(task, model_id, spec, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=3):  
+def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=3):  
     '''
     todo
     '''
@@ -222,8 +225,8 @@ def train(task, model_id, spec, eval_steps_=500, per_device_train_batch_size_=8,
     print('{}: params: spec= {}; eval_steps_={}; per_device_train_batch_size_={}; per_device_eval_batch_size_={}; num_train_epochs_={}'.format(__name__, spec, eval_steps_, per_device_train_batch_size_, per_device_eval_batch_size_, num_train_epochs_))
     
     ### ### ### ### ###
-    
-    tokenizer, model = load_hf(model_id)
+    if not model or not tokenizer:
+        tokenizer, model = load_hf(model_id)
         
     ### ### ### ### ### 
     # load data set
