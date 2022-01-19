@@ -11,6 +11,7 @@ res_data/IMDB_prepare.ipynb
 res_data/Twitter_prepare.ipynb
 res_data/Twitter_l_test
 res_data/Twitter_l_train
+res_data/data_prep.txt
 
 .ipynb_checkpoints/
 res_data/.ipynb_checkpoints/

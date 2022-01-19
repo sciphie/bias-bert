@@ -1,6 +1,6 @@
 import sys, os, re
 sys.path.append('./..')
-from train_util import check_path
+from train_functions import check_path
 import pandas as pd
 import data_masking as masking
 import numpy as np
@@ -12,7 +12,7 @@ check_path(path + 'Twitter_training')
 check_path('Twitter_raw_data')
 
 ########################################################################################
-# Download IMDb Data
+# Download Twitter Data
 #os.system('gdown https://drive.google.com/uc?id=0B04GJPshIjmPRnZManQwWEdTZjg')
 #os.system('unzip trainingandtestdata.zip')
 #os.system('mv testdata.manual.2009.06.14.csv Twitter_raw_data/')

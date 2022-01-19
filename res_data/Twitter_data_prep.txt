@@ -1,0 +1,48 @@
+Current GPU device : 0
+imported term dicts: prons_m2f, prons_f2m, terms_m2f, terms_f2m; and sets; all_prons and all_terms
+successfully imported the latest version of data_masking.
+ make_all_df: finish counts and length
+ make_all_df: finish text_all_M
+ make_all_df: finish text_all_F
+ make_all_df: finish text_all_N
+ make_all_df: finish text_weat_M
+ make_all_df: finish text_weat_F
+ make_all_df: finish text_weat_N
+ make_all_df: finish text_pro_M
+ make_all_df: finish text_pro_F
+ make_all_df: finish text_pro_N
+ make_all_df: finish counts and length
+ make_all_df: finish text_all_M
+ make_all_df: finish text_all_F
+ make_all_df: finish text_all_N
+ make_all_df: finish text_weat_M
+ make_all_df: finish text_weat_F
+ make_all_df: finish text_weat_N
+ make_all_df: finish text_pro_M
+ make_all_df: finish text_pro_F
+ make_all_df: finish text_pro_N
+all tests ok
+tested dataframe - everything is fine
+all tests ok
+tested dataframe - everything is fine
+(got assert error here) shape of df with only samples that include terms: 
+(108530, 18)
+assert True
+assert True
+assert True
+assert True
+assert True
+assert True
+assert True
+assert False
+assert False
+assert False
+assert False
+assert False
+assert False
+assert True
+assert True
+assert True
+assert True
+assert True
+assert True

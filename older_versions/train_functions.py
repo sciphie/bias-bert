@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 import torch, logging, transformers, sys, os, datetime
@@ -172,71 +171,6 @@ def compute_metrics(p):# ,log=logging):
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
 
 
-
-def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=5):  
-    '''
-    todo
-    '''
-    # I removed the logging block for the moment as I am not using it right now anyway 
-    
-    print('{}: params: spec= {}; eval_steps_={}; per_device_train_batch_size_={}; per_device_eval_batch_size_={}; num_train_epochs_={}'.format(__name__, spec, eval_steps_, per_device_train_batch_size_, per_device_eval_batch_size_, num_train_epochs_))
-    
-    ### ### ### ### ###
-    if not model or not tokenizer:
-        tokenizer, model = load_hf(model_id)
-        
-    ### ### ### ### ### 
-    # load data set
-    data_set_path = 'res_data/{}_training/{}_{}_'.format(task, task, spec)
-    df_train = pd.read_pickle(data_set_path+'train')
-    df_test = pd.read_pickle(data_set_path+'test')
-    
-    print(__name__ +': successfully loaded --- ' + data_set_path)
-    
-    # modify data sets 
-    for df in [df_train, df_test]:
-        df.label = pd.factorize(df.label)[0]
-        df.rename(columns={df.columns[1]:'text'}, inplace=True)
-    
-    X = list(df_train["text"])
-    y = list(df_train["label"])
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=11)
-    
-    X_train_tokenized = tokenizer(X_train, padding=True, truncation=True, max_length=512)
-    X_val_tokenized = tokenizer(X_val, padding=True, truncation=True, max_length=512)
-    
-    train_dataset = Dataset(X_train_tokenized, y_train) # tu.
-    val_dataset = Dataset(X_val_tokenized, y_val) # tu.
-    
-    output_path = check_path('res_models/{}/{}/output_{}/'.format(task, model_id, spec)) # tu.
-    output_path = "res_models/{}/{}/output_{}/".format(task, model_id, spec)
-
-    # Define Trainer
-    args = TrainingArguments(
-        output_dir=output_path,
-        evaluation_strategy="steps",
-        eval_steps=eval_steps_, #500,
-        per_device_train_batch_size=per_device_train_batch_size_, #8,
-        per_device_eval_batch_size=per_device_eval_batch_size_, # 8,
-        num_train_epochs=num_train_epochs_ ,#3,
-        seed=0,
-        load_best_model_at_end=True,
-        logging_dir='./res_models/runs/{}_{}_{}'.format(task, model_id, spec)
-    )
-    trainer = Trainer(
-        model=model,
-        args=args,
-        train_dataset=train_dataset,
-        eval_dataset=val_dataset,
-        compute_metrics= compute_metrics, # tu.
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
-    )
-
-    # Train pre-trained model
-    trainer.train()
-
-
-
 def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False):
     # ----- Load trained model -----#   
     path_ = "res_models/{}/{}/output_{}/".format(task, model_id, spec)
@@ -282,15 +216,63 @@ def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False
 
 
 
+def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=3):  
+    '''
+    todo
+    '''
+    # I removed the logging block for the moment as I am not using it right now anyway 
+    
+    print('{}: params: spec= {}; eval_steps_={}; per_device_train_batch_size_={}; per_device_eval_batch_size_={}; num_train_epochs_={}'.format(__name__, spec, eval_steps_, per_device_train_batch_size_, per_device_eval_batch_size_, num_train_epochs_))
+    
+    ### ### ### ### ###
+    if not model or not tokenizer:
+        tokenizer, model = load_hf(model_id)
+        
+    ### ### ### ### ### 
+    # load data set
+    data_set_path = 'res_data/{}_training/{}_{}_'.format(task, task, spec)
+    df_train = pd.read_pickle(data_set_path+'train')
+    df_test = pd.read_pickle(data_set_path+'test')
+    
+    print(__name__ +': successfully loaded --- ' + data_set_path)
+    
+    # modify data sets 
+    for df in [df_train, df_test]:
+        df.label = pd.factorize(df.label)[0]
+        df.rename(columns={df.columns[1]:'text'}, inplace=True)
+    
+    X = list(df_train["text"])
+    y = list(df_train["label"])
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=11)
+    
+    X_train_tokenized = tokenizer(X_train, padding=True, truncation=True, max_length=512)
+    X_val_tokenized = tokenizer(X_val, padding=True, truncation=True, max_length=512)
+    
+    train_dataset = Dataset(X_train_tokenized, y_train) # tu.
+    val_dataset = Dataset(X_val_tokenized, y_val) # tu.
+    
+    output_path = check_path('res_models/{}/{}/output_{}'.format(task, model_id, spec)) # tu.
 
+    # Define Trainer
+    args = TrainingArguments(
+        output_dir=output_path,
+        evaluation_strategy="steps",
+        eval_steps=eval_steps_, #500,
+        per_device_train_batch_size=per_device_train_batch_size_, #8,
+        per_device_eval_batch_size=per_device_eval_batch_size_, # 8,
+        num_train_epochs=num_train_epochs_ ,#3,
+        seed=0,
+        load_best_model_at_end=True,
+    )
+    trainer = Trainer(
+        model=model,
+        args=args,
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
+        compute_metrics= compute_metrics, # tu.
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
+    )
 
-'''
-    y_pred = np.argmax(raw_pred, axis=1)
-    y_true = list(test_data["label"])
+    # Train pre-trained model
+    trainer.train()
 
-    acc = [x==y for x, y in zip(y_pred, y_true)]
-    acc = acc.count(True)/ len(acc)
-    sk_acc = accuracy_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred, average='binary')
-    return(spec,sk_acc, f1, acc ==sk_acc, acc)
-'''

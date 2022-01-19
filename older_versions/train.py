@@ -15,7 +15,7 @@ if you'd like to process multiple specs but not all of them, you can also provid
 # I think I do not need any more Imports. All are included in train_util
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 
 from train_functions import *
 from rtpt import RTPT
