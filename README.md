@@ -5,8 +5,8 @@ clone repository and cd into bias-bert
 install requirements.txt in your environment  
 
 ### get and prepare data 
-`python res_data/IMDB_data_preparation_script.py | tee data_preparation.txt`  
-`python cd res_data/twitter_data_preparation_script.py | tee data_preparation.txt`  
+`python res_data/IMDB_data_preparation_script.py | tee data_prep.txt`  
+`python cd res_data/twitter_data_preparation_script.py | tee data_prep.txt`  
 
 ### train
 Train the models with train.py. The script is called with three variables, which are (1) the task (i.e. "IMDB" or "Twitter"), (2) the defined model_id of the pretrained model (find a list of all options below) and (3) the data specification(s) (spec) that are used to train the model(s). Each specification determines a different subset of test and training data and results in one model.  
