@@ -171,50 +171,6 @@ def compute_metrics(p):# ,log=logging):
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
 
 
-def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False):
-    # ----- Load trained model -----#   
-    path_ = "res_models/{}/{}/output_{}/".format(task, model_id, spec)
-    print(path_)
-    #filenames = next(walk(path_), (None, [], None))[1]  # [] if no file
-    filenames = glob(path_ + '*')
-    filenames.reverse()
-    print(filenames)
-    print('#################')
-    print(filenames[0])    
-    model_path = filenames[0]
-    print(model_path)
-    model = load_hf(model_id, path_to_model=model_path) # DistilBertForSequenceClassification.from_pretrained(, num_labels=2) 
-    
-    # ----- Load test data -----#
-    if restricted_test_set: 
-        print(timestamp(True) + 'calculate accuracy with RESTRICTED test_set')
-        test_data = pd.read_pickle('res_data/{}_training/{}_{}_test'.format(task,task,spec))
-    else:
-        print(timestamp(True)+ 'calculate accuracy with ALL test samples')
-        test_data = pd.read_pickle('res_data/' + task + '_l_test')
-    test_data.label = pd.factorize(test_data.label)[0]
-    if 'text' in test_data.columns[1]:
-        test_data.rename(columns={test_data.columns[1]:'text'}, inplace=True)
-    else:
-        print("ERROR: compute_metrics - wrong column renamed. This is not the text column")
-        # log.error(__name__ + ": compute_metrics - " + 'wrong column renamed. This is not the text column')          
-        
-    # ----- Predict -----#
-    X_test = list(test_data["text"])
-    X_test_tokenized = tokenizer(X_test, padding=True, truncation=True, max_length=512)
-
-    # Create torch dataset
-    test_dataset = Dataset(X_test_tokenized)
-
-    # Define test trainer
-    test_trainer = Trainer(model)
-
-    # Make prediction
-    raw_pred, _, _ = test_trainer.predict(test_dataset)
-    
-    return(compute_metrics([raw_pred,list(test_data["label"])]))
-
-
 
 def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=3):  
     '''
@@ -277,14 +233,48 @@ def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per
     trainer.train()
 
 
+    
+def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False):
+    # ----- Load trained model -----#   
+    path_ = "res_models/{}/{}/output_{}/".format(task, model_id, spec)
+    print(path_)
+    #filenames = next(walk(path_), (None, [], None))[1]  # [] if no file
+    filenames = glob(path_ + '*')
+    filenames.reverse()
+    print(filenames)
+    print('#################')
+    print(filenames[0])    
+    model_path = filenames[0]
+    print(model_path)
+    model = load_hf(model_id, path_to_model=model_path) # DistilBertForSequenceClassification.from_pretrained(, num_labels=2) 
+    
+    # ----- Load test data -----#
+    if restricted_test_set: 
+        print(timestamp(True) + 'calculate accuracy with RESTRICTED test_set')
+        test_data = pd.read_pickle('res_data/{}_training/{}_{}_test'.format(task,task,spec))
+    else:
+        print(timestamp(True)+ 'calculate accuracy with ALL test samples')
+        test_data = pd.read_pickle('res_data/' + task + '_l_test')
+    test_data.label = pd.factorize(test_data.label)[0]
+    if 'text' in test_data.columns[1]:
+        test_data.rename(columns={test_data.columns[1]:'text'}, inplace=True)
+    else:
+        print("ERROR: compute_metrics - wrong column renamed. This is not the text column")
+        # log.error(__name__ + ": compute_metrics - " + 'wrong column renamed. This is not the text column')          
+        
+    # ----- Predict -----#
+    X_test = list(test_data["text"])
+    X_test_tokenized = tokenizer(X_test, padding=True, truncation=True, max_length=512)
 
-'''
-    y_pred = np.argmax(raw_pred, axis=1)
-    y_true = list(test_data["label"])
+    # Create torch dataset
+    test_dataset = Dataset(X_test_tokenized)
 
-    acc = [x==y for x, y in zip(y_pred, y_true)]
-    acc = acc.count(True)/ len(acc)
-    sk_acc = accuracy_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred, average='binary')
-    return(spec,sk_acc, f1, acc ==sk_acc, acc)
-'''
+    # Define test trainer
+    test_trainer = Trainer(model)
+
+    # Make prediction
+    raw_pred, _, _ = test_trainer.predict(test_dataset)
+    
+    return(compute_metrics([raw_pred,list(test_data["label"])]))
+
+

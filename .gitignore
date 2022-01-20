@@ -21,6 +21,7 @@ res_models/accuracies/*
 res_models/IMDB/*
 res_models/logs/*
 res_models/Twitter/*
+res_models/runs/*
 
 !res_models/accuracies/.placeholder
 !res_models/IMDB/.placeholder

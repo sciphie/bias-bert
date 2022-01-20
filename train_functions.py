@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 import torch, logging, transformers, sys, os, datetime
@@ -173,7 +172,7 @@ def compute_metrics(p):# ,log=logging):
 
 
 
-def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=5):  
+def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=100):  
     '''
     todo
     '''
@@ -209,7 +208,7 @@ def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per
     val_dataset = Dataset(X_val_tokenized, y_val) # tu.
     
     output_path = check_path('res_models/{}/{}/output_{}/'.format(task, model_id, spec)) # tu.
-    output_path = "res_models/{}/{}/output_{}/".format(task, model_id, spec)
+    #output_path = "res_models/{}/{}/output_{}/".format(task, model_id, spec)
 
     # Define Trainer
     args = TrainingArguments(
@@ -221,7 +220,7 @@ def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per
         num_train_epochs=num_train_epochs_ ,#3,
         seed=0,
         load_best_model_at_end=True,
-        logging_dir='./res_models/runs/{}_{}_{}'.format(task, model_id, spec)
+        logging_dir='./res_models/runs/{}_{}_{}_{}'.format(task, model_id, spec, timestamp())
     )
     trainer = Trainer(
         model=model,
@@ -234,7 +233,6 @@ def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per
 
     # Train pre-trained model
     trainer.train()
-
 
 
 def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False):
@@ -280,17 +278,3 @@ def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False
     
     return(compute_metrics([raw_pred,list(test_data["label"])]))
 
-
-
-
-
-'''
-    y_pred = np.argmax(raw_pred, axis=1)
-    y_true = list(test_data["label"])
-
-    acc = [x==y for x, y in zip(y_pred, y_true)]
-    acc = acc.count(True)/ len(acc)
-    sk_acc = accuracy_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred, average='binary')
-    return(spec,sk_acc, f1, acc ==sk_acc, acc)
-'''
