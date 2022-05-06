@@ -12,7 +12,31 @@ from transformers import (
     EarlyStoppingCallback,
 )
 from glob import glob
- 
+from rtpt import RTPT
+from transformers import BertModel, BertConfig
+
+import os 
+#os.environ["CUDA_VISIBLE_DEVICES"] = "3" # str(gpus[i])
+
+name = 'h-do04-trtr' #hidden dropout 
+
+# Initializing a BERT bert-base-uncased style configuration --- todo : AlbertConfig etc
+
+configuration = BertConfig(
+    hidden_dropout_prob=0.4,
+    # attention_probs_dropout_prob=0.7,
+    num_labels=2
+)
+
+# Initializing a model from the bert-base-uncased style configuration
+
+#model = BertModel(configuration)
+
+# Accessing the model configuration
+
+#configuration = model.config
+
+
 
 # see https://huggingface.co/docs/transformers/main_classes/logging
 transformers.utils.logging.set_verbosity_info
@@ -67,7 +91,7 @@ def load_hf(model_id, load_model=True, path_to_model=None):
     #model_name, model_id = "albert-base-v2", "albertbase"
     #model_name, model_id = "albert-large-v2", "albertlarge"
     --- Todo --- #model_name, model_id = "gpt2", "gpt2"
-        '''
+    '''
     model = None
     
     # bertbase 
@@ -84,7 +108,8 @@ def load_hf(model_id, load_model=True, path_to_model=None):
             model_name = "bert-base-uncased"
         tokenizer = BertTokenizer.from_pretrained(model_name)
         if load_model: 
-            model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=2)    
+            print('test test')
+            model = BertForSequenceClassification.from_pretrained(model_name, config=configuration)#, num_labels=2)#     
   
     # distilbert
     elif model_id == "distbase" or model_id == "distlarge":
@@ -157,8 +182,14 @@ class Dataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.encodings["input_ids"])
 
+rtpt_train = RTPT(name_initials='SJ', experiment_name=name, max_iterations=100)
+rtpt_train.start()
 
-def compute_metrics(p):# ,log=logging):
+def compute_metrics(p):
+    try:
+        rtpt_train.step(subtitle=f"tr")
+    except:
+        print('rtpt did not work in compute_metrics()')
     pred, labels = p
     pred = np.argmax(pred, axis=1)
 
@@ -171,19 +202,22 @@ def compute_metrics(p):# ,log=logging):
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
 
 
-
-def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per_device_train_batch_size_=8, per_device_eval_batch_size_=8, num_train_epochs_=100):  
+def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per_device_train_batch_size_=32, per_device_eval_batch_size_=32, num_train_epochs_=100):  
     '''
     todo
     '''
     # I removed the logging block for the moment as I am not using it right now anyway 
-    
+
     print('{}: params: spec= {}; eval_steps_={}; per_device_train_batch_size_={}; per_device_eval_batch_size_={}; num_train_epochs_={}'.format(__name__, spec, eval_steps_, per_device_train_batch_size_, per_device_eval_batch_size_, num_train_epochs_))
+    #print(model, type(model))
     
     ### ### ### ### ###
     if not model or not tokenizer:
         tokenizer, model = load_hf(model_id)
-        
+        print('#####')
+    print('TRAIN : ')
+    print(model.config)
+    model.train()
     ### ### ### ### ### 
     # load data set
     data_set_path = 'res_data/{}_training/{}_{}_'.format(task, task, spec)
@@ -213,14 +247,28 @@ def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per
     # Define Trainer
     args = TrainingArguments(
         output_dir=output_path,
+        learning_rate=2e-5,
+        weight_decay=0.01,
+#        do_train=True, 
+#        do_eval=True, 
+#        per_device_train_batch_size=16, #8,
+#        per_device_eval_batch_size=16, # 8,        
+#        num_train_epochs=num_train_epochs_ ,#3,
+#        logging_steps=20000,
+#        logging_first_step=True, 
+#        save_steps=40000,
+#       #evaluate_during_training=True,
+#        fp16=True,
+#        eval_steps=60000,      
+        
         evaluation_strategy="steps",
         eval_steps=eval_steps_, #500,
-        per_device_train_batch_size=per_device_train_batch_size_, #8,
-        per_device_eval_batch_size=per_device_eval_batch_size_, # 8,
+        per_device_train_batch_size=per_device_train_batch_size_, #16 8,
+        per_device_eval_batch_size=per_device_eval_batch_size_, # 16 8,
         num_train_epochs=num_train_epochs_ ,#3,
         seed=0,
-        load_best_model_at_end=True,
-        logging_dir='./res_models/runs/{}_{}_{}_{}'.format(task, model_id, spec, timestamp())
+        load_best_model_at_end=True, # EarlyStoppingCallback requires load_best_model_at_end = True
+        logging_dir='./res_models/runs/{}_{}_{}_{}_{}'.format(task, model_id, spec, timestamp(), name)
     )
     trainer = Trainer(
         model=model,
@@ -228,7 +276,7 @@ def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
         compute_metrics= compute_metrics, # tu.
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
+        #callbacks=[EarlyStoppingCallback(early_stopping_patience=100)],
     )
 
     # Train pre-trained model
@@ -237,7 +285,7 @@ def train(task, model_id, spec, tokenizer=None, model=None, eval_steps_=500, per
 
 def calc_acc(spec, tokenizer, model_id, task="foo",  restricted_test_set = False):
     # ----- Load trained model -----#   
-    path_ = "res_models/{}/{}/output_{}/".format(task, model_id, spec)
+    path_ = "res_models/{}/{}/output_{}_{}/".format(task, model_id, spec, name)
     print(path_)
     #filenames = next(walk(path_), (None, [], None))[1]  # [] if no file
     filenames = glob(path_ + '*')

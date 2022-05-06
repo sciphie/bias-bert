@@ -1,3 +1,19 @@
+
+# spcific for my own repository
+process_imdb.ipynb
+process_twitter.ipynb
+test.ipynb
+
+older_versions
+res_plots/old
+current*
+footesting.ipynb
+find_example.ipynb
+
+# Notebooks
+analyse.ipynb
+analyse_BS.ipynb
+
 Untitled.ipynb
 run_all_models.py
 
@@ -14,18 +30,19 @@ res_data/Twitter_l_train
 res_data/data_prep.txt
 
 .ipynb_checkpoints/
+__pycache__/
+.gitignore.save
+plot1.py
+
+
 res_data/.ipynb_checkpoints/
 res_data/__pycache__/
 
-res_models/accuracies/*
-res_models/IMDB/*
-res_models/logs/*
-res_models/Twitter/*
-res_models/runs/*
+res_models/*
+res_results/*
+!res_results/IMDB_evaluation_df
 
-!res_models/accuracies/.placeholder
-!res_models/IMDB/.placeholder
-!res_models/logs/.placeholder
-!res_models/Twitter/.placeholder
+training_log
 
+!res_models/.placeholder
 
