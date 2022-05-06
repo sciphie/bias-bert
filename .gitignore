@@ -4,7 +4,7 @@ process_imdb.ipynb
 process_twitter.ipynb
 test.ipynb
 
-older_versions
+older_versions/*
 res_plots/old
 current*
 footesting.ipynb
