@@ -11,11 +11,11 @@ install requirements.txt in your environment
 ### train
 Train the models with train.py. The script is called with three variables, which are (1) the task (i.e. "IMDB" or "Twitter"), (2) the defined model_id of the pretrained model (find a list of all options below) and (3) the data specification(s) (spec) that are used to train the model(s). Each specification determines a different subset of test and training data and results in one model.  
 
-`python train.py [task] [model_id] [spec]` is the structure of the command, wheere all three variables need to be strings. Here are some examples:  
+`python train_pytorch.py [task] [model_id] [spec]` is the structure of the command, wheere all three variables need to be strings. Here are some examples:  
   
-- `python train.py "Twitter" "bertbase" "all"` trains all specifications for that task and model  
-- `python train.py "Twitter" "bertbase" "N_pro"` only trains one model with the N_pro data subset  
-- `python train.py "Twitter" "bertbase" "N_pro N_all original"` trains three different models, one for each included data specification  
+- `python train_pytorch.py "Twitter" "bertbase" "all"` trains all specifications for that task and model  
+- `python train_pytorch.py "Twitter" "bertbase" "N_pro"` only trains one model with the N_pro data subset  
+- `python train_pytorch.py "Twitter" "bertbase" "N_pro N_all original"` trains three different models, one for each included data specification  
 
 
 ### possible variables
